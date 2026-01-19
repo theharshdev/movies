@@ -19,7 +19,10 @@
         class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center gap-3"
       >
         <h3 class="text-2xl font-medium">TMDb Movies</h3>
-        <div class="flex justify-end gap-3">
+        <div
+          id="menuFliters"
+          class="lg:flex hidden justify-end gap-3 lg:flex-row flex-col lg:static fixed top-18 right-3.5 lg:border-0 border border-gray-600 bg-gray-900 lg:p-0 p-5 rounded"
+        >
           <div id="yearDropdown" class="relative w-36 cursor-pointer"></div>
           <div id="genreDropdown" class="relative w-36 cursor-pointer"></div>
           <div id="languageDropdown" class="relative w-36 cursor-pointer"></div>
@@ -32,6 +35,13 @@
             Clear All Filters
           </button>
         </div>
+        <button
+          id="openFilters"
+          type="button"
+          class="text-base cursor-pointer font-medium lg:hidden border bg-gray-800 border-gray-600 rounded py-2 px-8"
+        >
+          Filters
+        </button>
       </div>
     </header>
     <!-- CONTENT -->
@@ -41,8 +51,11 @@
         placeholder="Search movies..."
         class="max-w-lg w-full block py-2.5 px-4 rounded-lg mx-auto bg-gray-700 font-medium outline-0 border-0"
       />
-      <p id="status" class="text-center text-gray-400"></p>
-      <div id="movies" class="columns-5 gap-6 mt-6"></div>
+      <p id="status" class="text-center text-gray-400 mt-3"></p>
+      <div
+        id="movies"
+        class="lg:columns-5 md:columns-4 sm:columns-3 columns-2 gap-6 mt-6"
+      ></div>
     </main>
     <!-- MOVIE MODAL -->
     <div
@@ -66,6 +79,25 @@
       </div>
     </div>
     <script>
+      const menuFliters = document.getElementById("menuFliters");
+      const openFiltersBtn = document.getElementById("openFilters");
+
+      function toggleFilters() {
+        const isHidden = menuFliters.classList.contains("hidden");
+
+        if (isHidden) {
+          menuFliters.classList.remove("hidden");
+          menuFliters.classList.add("flex");
+          openFiltersBtn.textContent = "Close";
+        } else {
+          menuFliters.classList.remove("flex");
+          menuFliters.classList.add("hidden");
+          openFiltersBtn.textContent = "Filters";
+        }
+      }
+
+      openFiltersBtn.addEventListener("click", toggleFilters);
+
       /* ================= CONFIG ================= */
       const TOKEN =
         "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZGQ4MDJjNjVjZThlMzI2ZTk0MmQ2YTFiMzk2MzQ3OCIsIm5iZiI6MTc2ODgwNTc1Mi4zMzYsInN1YiI6IjY5NmRkNTc4ZmIzODViMjRkYWRjYjc5NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AUGd4JvwsiJCh4esgFE5Bq1hL5laXTNBHOeXP72rOD4";
@@ -175,7 +207,7 @@
                 : "https://via.placeholder.com/500x750"
             }" class="w-full"/>
             <div class="p-3">
-              <h3 class="text-lg font-semibold">${movie.title}</h3>
+              <h3 class="sm:text-lg text-sm font-semibold">${movie.title}</h3>
               <div class="flex justify-between gap-2 items-center mt-3">
                 <p class="text-xs text-gray-400">⭐ ${movie.vote_average}</p>
                 <p class="text-xs text-gray-500">${movie.release_date || ""}</p>
@@ -276,7 +308,7 @@
               m.poster_path
                 ? IMG_URL + m.poster_path
                 : "https://via.placeholder.com/500x750"
-            }" class="w-full md:w-1/3 rounded"/>
+            }" class="w-full md:w-1/3 rounded lg:max-w-none max-w-48 mx-auto block"/>
             <div class="flex-1 space-y-3">
               <h2 class="text-2xl font-bold">${m.title}</h2>
               <p class="text-gray-300 text-sm">${m.overview}</p>
