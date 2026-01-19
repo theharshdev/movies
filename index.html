@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./src/output.css" />
+    <title>TMDb Movies</title>
+  </head>
+  <body class="bg-gray-900 text-white">
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-gray-900 border-b border-gray-800">
+      <div
+        class="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center gap-3"
+      >
+        <h3 class="text-2xl font-medium">TMDb Movies</h3>
+        <div class="flex justify-end gap-3">
+          <div id="yearDropdown" class="relative w-36 cursor-pointer"></div>
+          <div id="genreDropdown" class="relative w-36 cursor-pointer"></div>
+          <div id="languageDropdown" class="relative w-36 cursor-pointer"></div>
+          <div id="ratingDropdown" class="relative w-36 cursor-pointer"></div>
+
+          <button
+            id="clearFilters"
+            class="bg-red-600 hover:bg-red-700 transition text-sm px-3 py-2 rounded font-medium cursor-pointer"
+          >
+            Clear All Filters
+          </button>
+        </div>
+      </div>
+    </header>
+    <!-- CONTENT -->
+    <main class="max-w-7xl mx-auto px-4 py-6">
+      <input
+        id="search"
+        placeholder="Search movies..."
+        class="max-w-lg w-full block py-2.5 px-4 rounded-lg mx-auto bg-gray-700 font-medium outline-0 border-0"
+      />
+      <p id="status" class="text-center text-gray-400"></p>
+      <div id="movies" class="columns-5 gap-6 mt-6"></div>
+    </main>
+    <!-- MOVIE MODAL -->
+    <div
+      id="movieModal"
+      class="fixed inset-0 bg-black/70 hidden items-center justify-center z-100"
+    >
+      <div
+        class="bg-gray-900 max-w-3xl w-full mx-4 rounded-lg overflow-hidden relative"
+      >
+        <button
+          id="closeModal"
+          class="absolute top-3 right-3 cursor-pointer text-xl font-bold text-gray-300 hover:text-white"
+        >
+          ✕
+        </button>
+
+        <div
+          id="modalContent"
+          class="flex flex-col md:flex-row gap-4 p-6"
+        ></div>
+      </div>
+    </div>
+    <script>
+      /* ================= CONFIG ================= */
+      const TOKEN =
+        "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZGQ4MDJjNjVjZThlMzI2ZTk0MmQ2YTFiMzk2MzQ3OCIsIm5iZiI6MTc2ODgwNTc1Mi4zMzYsInN1YiI6IjY5NmRkNTc4ZmIzODViMjRkYWRjYjc5NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AUGd4JvwsiJCh4esgFE5Bq1hL5laXTNBHOeXP72rOD4";
+      const BASE_URL = "https://api.themoviedb.org/3";
+      const IMG_URL = "https://image.tmdb.org/t/p/w500";
+
+      /* ================= STATE ================= */
+      let page = 1;
+      let totalPages = 1;
+      let loading = false;
+
+      let filters = { year: "", genre: "", language: "", rating: "" };
+      const dropdownDefaults = {};
+
+      /* ================= ELEMENTS ================= */
+      const moviesEl = document.getElementById("movies");
+      const statusEl = document.getElementById("status");
+      const searchEl = document.getElementById("search");
+
+      /* ================= CUSTOM DROPDOWN ================= */
+      function createDropdown({ mount, label, options, onSelect }) {
+        mount.innerHTML = `
+          <button class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-left flex justify-between items-center">
+            <span>${label}</span>
+            <span>▾</span>
+          </button>
+          <div class="hidden absolute w-full bg-gray-800 border border-gray-700 mt-1 rounded max-h-60 overflow-auto z-50"></div>
+        `;
+
+        const btn = mount.querySelector("button");
+        const menu = mount.querySelector("div");
+
+        dropdownDefaults[mount.id] = { btn, label };
+
+        options.forEach((opt) => {
+          const item = document.createElement("div");
+          item.textContent = opt.label;
+          item.className = "px-3 py-2 hover:bg-gray-700 cursor-pointer text-sm";
+          item.onclick = () => {
+            btn.querySelector("span").textContent = opt.label;
+            menu.classList.add("hidden");
+            onSelect(opt.value);
+          };
+          menu.appendChild(item);
+        });
+
+        btn.onclick = () => menu.classList.toggle("hidden");
+
+        document.addEventListener("click", (e) => {
+          if (!mount.contains(e.target)) menu.classList.add("hidden");
+        });
+      }
+
+      /* ================= FETCH MOVIES ================= */
+      async function fetchMovies(reset = false) {
+        if (loading || page > totalPages) return;
+        loading = true;
+        statusEl.textContent = "Loading...";
+
+        try {
+          let url = `${BASE_URL}/discover/movie?sort_by=popularity.desc&page=${page}`;
+
+          if (searchEl.value) {
+            url = `${BASE_URL}/search/movie?query=${encodeURIComponent(
+              searchEl.value,
+            )}&page=${page}`;
+          }
+
+          if (filters.year) url += `&primary_release_year=${filters.year}`;
+          if (filters.genre) url += `&with_genres=${filters.genre}`;
+          if (filters.language)
+            url += `&with_original_language=${filters.language}`;
+          if (filters.rating) url += `&vote_average.gte=${filters.rating}`;
+
+          const res = await fetch(url, {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+          });
+
+          if (!res.ok) throw new Error("Failed to fetch movies");
+
+          const data = await res.json();
+          totalPages = data.total_pages;
+
+          if (reset) moviesEl.innerHTML = "";
+          renderMovies(data.results);
+          statusEl.textContent = "";
+          page++;
+        } catch (err) {
+          statusEl.textContent = err.message;
+        } finally {
+          loading = false;
+        }
+      }
+
+      /* ================= RENDER MOVIES ================= */
+      function renderMovies(movies) {
+        movies.forEach((movie) => {
+          const card = document.createElement("div");
+          card.onclick = () => openMovie(movie.id);
+          card.className =
+            "bg-gray-800 rounded-lg overflow-hidden shadow hover:scale-105 transition mb-6 cursor-pointer";
+
+          card.innerHTML = `
+            <img src="${
+              movie.poster_path
+                ? IMG_URL + movie.poster_path
+                : "https://via.placeholder.com/500x750"
+            }" class="w-full"/>
+            <div class="p-3">
+              <h3 class="text-lg font-semibold">${movie.title}</h3>
+              <div class="flex justify-between gap-2 items-center mt-3">
+                <p class="text-xs text-gray-400">⭐ ${movie.vote_average}</p>
+                <p class="text-xs text-gray-500">${movie.release_date || ""}</p>
+              </div>
+            </div>
+          `;
+          moviesEl.appendChild(card);
+        });
+      }
+
+      /* ================= INIT DROPDOWNS ================= */
+      createDropdown({
+        mount: yearDropdown,
+        label: "Year",
+        options: [2025, 2024, 2023, 2022, 2021].map((y) => ({
+          label: y,
+          value: y,
+        })),
+        onSelect: (v) => {
+          filters.year = v;
+          resetAndFetch();
+        },
+      });
+
+      createDropdown({
+        mount: languageDropdown,
+        label: "Language",
+        options: [
+          { label: "English", value: "en" },
+          { label: "Hindi", value: "hi" },
+          { label: "Japanese", value: "ja" },
+          { label: "Korean", value: "ko" },
+          { label: "French", value: "fr" },
+        ],
+        onSelect: (v) => {
+          filters.language = v;
+          resetAndFetch();
+        },
+      });
+
+      createDropdown({
+        mount: ratingDropdown,
+        label: "Rating",
+        options: [5, 6, 7, 8].map((r) => ({
+          label: r + "+",
+          value: r,
+        })),
+        onSelect: (v) => {
+          filters.rating = v;
+          resetAndFetch();
+        },
+      });
+
+      async function initGenres() {
+        const res = await fetch(`${BASE_URL}/genre/movie/list`, {
+          headers: { Authorization: `Bearer ${TOKEN}` },
+        });
+        const data = await res.json();
+
+        createDropdown({
+          mount: genreDropdown,
+          label: "Genre",
+          options: data.genres.map((g) => ({
+            label: g.name,
+            value: g.id,
+          })),
+          onSelect: (v) => {
+            filters.genre = v;
+            resetAndFetch();
+          },
+        });
+      }
+
+      /* ================= MOVIE MODAL ================= */
+      const modal = document.getElementById("movieModal");
+      const modalContent = document.getElementById("modalContent");
+      const closeModal = document.getElementById("closeModal");
+
+      closeModal.onclick = () => (modal.style.display = "none");
+
+      modal.onclick = (e) => {
+        if (e.target === modal) modal.style.display = "none";
+      };
+
+      async function openMovie(movieId) {
+        modal.style.display = "flex";
+        modalContent.innerHTML = "<p>Loading...</p>";
+
+        try {
+          const res = await fetch(`${BASE_URL}/movie/${movieId}`, {
+            headers: { Authorization: `Bearer ${TOKEN}` },
+          });
+
+          const m = await res.json();
+
+          modalContent.innerHTML = `
+            <img src="${
+              m.poster_path
+                ? IMG_URL + m.poster_path
+                : "https://via.placeholder.com/500x750"
+            }" class="w-full md:w-1/3 rounded"/>
+            <div class="flex-1 space-y-3">
+              <h2 class="text-2xl font-bold">${m.title}</h2>
+              <p class="text-gray-300 text-sm">${m.overview}</p>
+              <p class="text-sm text-gray-400">⭐ ${m.vote_average}</p>
+              <p class="text-sm text-gray-400">📅 ${m.release_date}</p>
+              <p class="text-sm text-gray-400">⏱ ${m.runtime} min</p>
+              <p class="text-sm text-gray-400">
+                🎭 ${m.genres.map((g) => g.name).join(", ")}
+              </p>
+            </div>
+          `;
+        } catch (err) {
+          modalContent.innerHTML = "<p>Error loading movie</p>";
+        }
+      }
+
+      /* ================= CLEAR FILTERS ================= */
+      function clearAllFilters() {
+        filters = { year: "", genre: "", language: "", rating: "" };
+        searchEl.value = "";
+        Object.values(dropdownDefaults).forEach(
+          (d) => (d.btn.querySelector("span").textContent = d.label),
+        );
+        resetAndFetch();
+      }
+
+      function resetAndFetch() {
+        page = 1;
+        totalPages = 1;
+        fetchMovies(true);
+      }
+
+      function debounce(fn, delay = 600) {
+        let t;
+        return (...a) => {
+          clearTimeout(t);
+          t = setTimeout(() => fn(...a), delay);
+        };
+      }
+
+      searchEl.addEventListener("input", debounce(resetAndFetch));
+      clearFilters.addEventListener("click", clearAllFilters);
+
+      window.addEventListener("scroll", () => {
+        if (
+          window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 300
+        ) {
+          fetchMovies();
+        }
+      });
+
+      initGenres();
+      fetchMovies();
+    </script>
+  </body>
+</html>
