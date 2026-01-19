@@ -98,13 +98,13 @@
 
       openFiltersBtn.addEventListener("click", toggleFilters);
 
-      /* ================= CONFIG ================= */
+      /*  CONFIG  */
       const TOKEN =
         "eyJhbGciOiJIUzI1NiJ9.eyJhdWQiOiIxZGQ4MDJjNjVjZThlMzI2ZTk0MmQ2YTFiMzk2MzQ3OCIsIm5iZiI6MTc2ODgwNTc1Mi4zMzYsInN1YiI6IjY5NmRkNTc4ZmIzODViMjRkYWRjYjc5NyIsInNjb3BlcyI6WyJhcGlfcmVhZCJdLCJ2ZXJzaW9uIjoxfQ.AUGd4JvwsiJCh4esgFE5Bq1hL5laXTNBHOeXP72rOD4";
       const BASE_URL = "https://api.themoviedb.org/3";
       const IMG_URL = "https://image.tmdb.org/t/p/w500";
 
-      /* ================= STATE ================= */
+      /*  STATE  */
       let page = 1;
       let totalPages = 1;
       let loading = false;
@@ -112,12 +112,12 @@
       let filters = { year: "", genre: "", language: "", rating: "" };
       const dropdownDefaults = {};
 
-      /* ================= ELEMENTS ================= */
+      /*  ELEMENTS  */
       const moviesEl = document.getElementById("movies");
       const statusEl = document.getElementById("status");
       const searchEl = document.getElementById("search");
 
-      /* ================= CUSTOM DROPDOWN ================= */
+      /*  CUSTOM DROPDOWN  */
       function createDropdown({ mount, label, options, onSelect }) {
         mount.innerHTML = `
           <button class="w-full bg-gray-800 border border-gray-700 rounded p-2 text-left flex justify-between items-center">
@@ -151,7 +151,7 @@
         });
       }
 
-      /* ================= FETCH MOVIES ================= */
+      /*  FETCH MOVIES  */
       async function fetchMovies(reset = false) {
         if (loading || page > totalPages) return;
         loading = true;
@@ -192,7 +192,7 @@
         }
       }
 
-      /* ================= RENDER MOVIES ================= */
+      /*  RENDER MOVIES  */
       function renderMovies(movies) {
         movies.forEach((movie) => {
           const card = document.createElement("div");
@@ -218,7 +218,7 @@
         });
       }
 
-      /* ================= INIT DROPDOWNS ================= */
+      /*  INIT DROPDOWNS  */
       createDropdown({
         mount: yearDropdown,
         label: "Year",
@@ -281,7 +281,7 @@
         });
       }
 
-      /* ================= MOVIE MODAL ================= */
+      /*  MOVIE MODAL  */
       const modal = document.getElementById("movieModal");
       const modalContent = document.getElementById("modalContent");
       const closeModal = document.getElementById("closeModal");
@@ -325,7 +325,7 @@
         }
       }
 
-      /* ================= CLEAR FILTERS ================= */
+      /*  CLEAR FILTERS  */
       function clearAllFilters() {
         filters = { year: "", genre: "", language: "", rating: "" };
         searchEl.value = "";
