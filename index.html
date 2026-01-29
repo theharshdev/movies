@@ -49,12 +49,12 @@
       <input
         id="search"
         placeholder="Search movies..."
-        class="max-w-lg w-full block py-2.5 px-4 rounded-lg mx-auto bg-gray-700 font-medium outline-0 border-0"
+        class="max-w-lg w-full block py-2.5 px-4 rounded mx-auto bg-gray-800 border border-gray-600 font-medium outline-0"
       />
       <p id="status" class="text-center text-gray-400 mt-3"></p>
       <div
         id="movies"
-        class="lg:columns-5 md:columns-4 sm:columns-3 columns-2 gap-6 mt-6"
+        class="grid lg:grid-cols-5 md:grid-cols-4 sm:grid-cols-3 grid-cols-2 gap-6 mt-6"
       ></div>
     </main>
     <!-- MOVIE MODAL -->
@@ -198,7 +198,7 @@
           const card = document.createElement("div");
           card.onclick = () => openMovie(movie.id);
           card.className =
-            "bg-gray-800 rounded-lg overflow-hidden shadow hover:scale-105 transition mb-6 cursor-pointer";
+            "bg-gray-800 rounded-lg overflow-hidden shadow hover:scale-105 transition cursor-pointer flex flex-col h-full";
 
           card.innerHTML = `
             <img src="${
@@ -206,9 +206,9 @@
                 ? IMG_URL + movie.poster_path
                 : "https://via.placeholder.com/500x750"
             }" class="w-full"/>
-            <div class="p-3">
+            <div class="p-3 flex flex-col justify-between h-full gap-3">
               <h3 class="sm:text-lg text-sm font-semibold">${movie.title}</h3>
-              <div class="flex justify-between gap-2 items-center mt-3">
+              <div class="flex justify-between gap-2 items-center">
                 <p class="text-xs text-gray-400">⭐ ${movie.vote_average}</p>
                 <p class="text-xs text-gray-500">${movie.release_date || ""}</p>
               </div>
@@ -222,7 +222,11 @@
       createDropdown({
         mount: yearDropdown,
         label: "Year",
-        options: [2025, 2024, 2023, 2022, 2021].map((y) => ({
+        options: [
+          2026, 2025, 2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016,
+          2015, 2014, 2013, 2012, 2011, 2010, 2009, 2008, 2007, 2006, 2005,
+          2004, 2003, 2002, 2001, 2000, 1999, 1998, 1997, 1996, 1995,
+        ].map((y) => ({
           label: y,
           value: y,
         })),
@@ -251,7 +255,7 @@
       createDropdown({
         mount: ratingDropdown,
         label: "Rating",
-        options: [5, 6, 7, 8].map((r) => ({
+        options: [5, 6, 7, 8, 9].map((r) => ({
           label: r + "+",
           value: r,
         })),
